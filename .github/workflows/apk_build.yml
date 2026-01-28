@@ -13,7 +13,7 @@ jobs:
     steps:
     # 1️⃣ Récupérer le code du repo
     - name: Checkout repo
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     # 2️⃣ Installer Python
     - name: Set up Python
@@ -39,7 +39,7 @@ jobs:
 
     # 5️⃣ Upload de l'APK généré pour le récupérer
     - name: Upload APK
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: MonApp-APK
         path: bin/*.apk
