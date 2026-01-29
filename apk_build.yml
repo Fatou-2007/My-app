@@ -1,0 +1,65 @@
+name: Build APK
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    # 1️⃣ Récupérer le code du repo
+    - name: Checkout repo
+      uses: actions/checkout@v4
+
+    # 2️⃣ Installer Python
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    # 3️⃣ Installer Buildozer + dépendances Linux
+    - name: Install dependencies
+      run: |
+        sudo apt update
+        sudo apt install -y python3-pip python3-setuptools git python3-dev \
+          build-essential autoconf libtool pkg-config zlib1g-dev \
+          libncurses5-dev libffi-dev libssl-dev openjdk-17-jdk unzip wget
+
+        pip install --upgrade pip
+        pip install buildozer cython kivy
+
+    # 4️⃣ Installer le SDK Android + AIDL + Build-tools
+    - name: Install Android SDK
+      run: |
+        mkdir -p $HOME/android-sdk
+        cd $HOME/android-sdk
+
+        wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
+        unzip commandlinetools-linux-*.zip
+
+        sudo mkdir -p /usr/lib/android-sdk/cmdline-tools
+        sudo mv cmdline-tools /usr/lib/android-sdk/cmdline-tools/latest
+
+        export ANDROID_HOME=/usr/lib/android-sdk
+        export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools
+
+        yes | sdkmanager --licenses
+
+        sdkmanager "platform-tools" "build-tools;33.0.2" "platforms;android-33"
+
+    # 5️⃣ Construire l'APK
+    - name: Build APK
+      run: |
+        export ANDROIDSDK=/usr/lib/android-sdk
+        export PATH=$PATH:$ANDROIDSDK/build-tools/33.0.2:$ANDROIDSDK/platform-tools
+
+        buildozer android debug
+
+    # 6️⃣ Upload de l'APK généré
+    - name: Upload APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: MonApp-APK
+        path: bin/*.apk
